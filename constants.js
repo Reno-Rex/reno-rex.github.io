@@ -255,16 +255,16 @@ const COLORS = {};      // For storing all colors used in the graphics
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
     COLORS.bg = color(0,127,255);
     COLORS.storm = {};
-    COLORS.storm[EXTROP] = color(192,192,192);
-    COLORS.storm[TROPWAVE] = color(128,204,255);
+    COLORS.storm[EXTROP] = color(224,224,224);         // EX //
+    COLORS.storm[TROPWAVE] = color(0,255,255);         // LO //
     COLORS.storm[TROP] = {};
-    COLORS.storm[TROP][-1] = color(94,186,255);        // TD //
-    COLORS.storm[TROP][0] = color(0,250,244);          // TS //
-    COLORS.storm[TROP][1] = color(255,255,204);        // C1 //
-    COLORS.storm[TROP][2] = color(255,231,117);        // C2 //
-    COLORS.storm[TROP][3] = color(255,193,64);         // C3 //
-    COLORS.storm[TROP][4] = color(255,143,32);         // C4 //
-    COLORS.storm[TROP][5] = color(255,96,96);          // C5 //
+    COLORS.storm[TROP][-1] = color(0,123,244);         // TD //
+    COLORS.storm[TROP][0] = color(0,239,0);            // TS //
+    COLORS.storm[TROP][1] = color(244,244,0);          // C1 //
+    COLORS.storm[TROP][2] = color(244,194,0);          // C2 //
+    COLORS.storm[TROP][3] = color(244,114,0);          // C3 //
+    COLORS.storm[TROP][4] = color(245,46,0);           // C4 //
+    COLORS.storm[TROP][5] = color(218,0,54);           // C5 //
     COLORS.storm[TROP][6] = color(255,20,20);          // C6 //
     COLORS.storm[TROP][7] = color(160,12,12);          // C7 //
     COLORS.storm[TROP][8] = color(151,36,70);          // C8 //
@@ -272,8 +272,8 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.storm[TROP][10] = color(211,78,153);        // C10 //
     COLORS.storm[TROP][11] = color(255,153,255);       // HYC //
     COLORS.storm[SUBTROP] = {};
-    COLORS.storm[SUBTROP][-1] = color(94,186,255);     // SD //
-    COLORS.storm[SUBTROP][0] = color(0,250,244);       // SS //
+    COLORS.storm[SUBTROP][-1] = color(111,43,246);     // SD //
+    COLORS.storm[SUBTROP][0] = color(167,248,167);     // SS //
     COLORS.storm.extL = "red";
     COLORS.land = [];
     COLORS.land.push([0.85, color(190,190,190)]);
