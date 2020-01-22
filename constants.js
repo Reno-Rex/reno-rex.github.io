@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20191109a";
+const VERSION_NUMBER = "20200119a";
 
 const SAVE_FORMAT = 3;  // Format #3 in use starting in v20190823a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -113,7 +113,7 @@ const SUBTROP = 1;//"subtropical";
 const TROP = 2;//"tropical";
 const TROPWAVE = 3;//"tropical wave";
 const STORM_TYPES = 4;//[EXTROP,SUBTROP,TROP,TROPWAVE];
-const NAME_LIST_PRESETS = [        // Presets for basin name lists
+const NAME_LIST_PRESETS = [        // Presets for basin name lists (old pre-DesignationSystem format; converted on use)
     [
         ['Ana','Bill','Claudette','Danny','Elsa','Fred','Grace','Henri','Ida','Julian','Kate','Larry','Mindy','Nicholas','Odette','Peter','Rose','Sam','Teresa','Victor','Wanda'],
         ['Alex','Bonnie','Colin','Danielle','Earl','Fiona','Gaston','Hermine','Ian','Julia','Karl','Lisa','Martin','Nicole','Owen','Paula','Richard','Shary','Tobias','Virginie','Walter'],
@@ -154,7 +154,7 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists
     ['Onil','Agni','Hibaru','Pyarr','Baaz','Fanoos','Mala','Mukda','Ogni','Akash','Gonu','Yemyin','Sidr','Nargis','Rashmi','Khai-Muk','Nisha','Bijli','Aila','Phyan','Ward','Laila','Bandu','Phet','Giri','Jal','Keila','Thane','Murjan','Nilam','Viyaru','Phailin','Helen','Lehar','Madi','Nanauk','Hudhud','Nilofar','Ashobaa','Komen','Chapala','Megh','Roanu','Kyant','Nada','Vardah','Maarutha','Mora','Ockhi','Sagar','Mekunu','Daye','Luban','Titli','Gaja','Phethai','Fani','Vayu','Hikaa','Kyarr','Maha','Bulbul','Pawan','Amphan'],
     [
         ['Ava','Berguitta','Cebile','Dumazile','Eliakim','Fakir','Guambe','Habana','Iman','Jobo','Kanga','Ludzi','Melina','Nathan','Onias','Pelagie','Quamar','Rita','Solani','Tarik','Urilia','Vuyane','Wagner','Xusa','Yarona','Zacarias'],
-        ['Alcide','Bouchra','Cilida','Desmond','Eketsang','Funani','Gelena','Haleh','Idai','Joaninha','Kenneth','Lorna','Maipelo','Njazi','Oscar','Pamela','Quentin','Rajab','Savana','Themba','Uyapo','Viviane','Walter','Xangy','Yemurai','Zanele'],
+        ['Ana','Batsirai','Cliff','Damako','Emnati','Fezile','Gombe','Halima','Issa','Jasmine','Karim','Letlama','Maipelo','Njazi','Oscar','Pamela','Quentin','Rajab','Savana','Themba','Uyapo','Viviane','Walter','Xangy','Yemurai','Zanele'],
         ['Ambali','Belna','Calvinia','Diane','Esami','Francisco','Gabekile','Herold','Irondro','Jeruto','Kundai','Lisebo','Michel','Nousra','Olivier','Pokera','Quincy','Rebaone','Salama','Tristan','Ursula','Violet','Wilson','Xila','Yekela','Zania'],
         ['Unnamed']
     ],
@@ -184,6 +184,8 @@ const DAMAGE_DIVISOR = 1000;
 const ENVDATA_NOT_FOUND_ERROR = "envdata-not-found";
 const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
+const DEFAULT_MAIN_SUBBASIN = 0;
+const DEFAULT_OUTBASIN_SUBBASIN = 255;
 // const ACTIVITY_MODE_NORMAL = 0;
 // const ACTIVITY_MODE_HYPER = 1;
 // const ACTIVITY_MODE_WILD = 2;
@@ -255,25 +257,25 @@ const COLORS = {};      // For storing all colors used in the graphics
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
     COLORS.bg = color(0,127,255);
     COLORS.storm = {};
-    COLORS.storm[EXTROP] = color(224,224,224);         // EX //
-    COLORS.storm[TROPWAVE] = color(0,255,255);         // LO //
+    COLORS.storm[EXTROP] = color(220,220,220);
+    COLORS.storm[TROPWAVE] = color(130,130,240);
     COLORS.storm[TROP] = {};
-    COLORS.storm[TROP][-1] = color(0,123,244);         // TD //
-    COLORS.storm[TROP][0] = color(0,239,0);            // TS //
-    COLORS.storm[TROP][1] = color(244,244,0);          // C1 //
-    COLORS.storm[TROP][2] = color(244,194,0);          // C2 //
-    COLORS.storm[TROP][3] = color(244,114,0);          // C3 //
-    COLORS.storm[TROP][4] = color(245,46,0);           // C4 //
-    COLORS.storm[TROP][5] = color(218,0,54);           // C5 //
-    COLORS.storm[TROP][6] = color(255,20,20);          // C6 //
-    COLORS.storm[TROP][7] = color(160,12,12);          // C7 //
-    COLORS.storm[TROP][8] = color(151,36,70);          // C8 //
-    COLORS.storm[TROP][9] = color(168,37,92);          // C9 //
-    COLORS.storm[TROP][10] = color(211,78,153);        // C10 //
-    COLORS.storm[TROP][11] = color(255,153,255);       // HYC //
+    COLORS.storm[TROP][-1] = color(20,20,230);
+    COLORS.storm[TROP][0] = color(20,230,20);
+    COLORS.storm[TROP][1] = color(230,230,20);
+    COLORS.storm[TROP][2] = color(240,170,20);
+    COLORS.storm[TROP][3] = color(240,20,20);
+    COLORS.storm[TROP][4] = color(250,40,250);
+    COLORS.storm[TROP][5] = color(250,140,250);
+    COLORS.storm[TROP][6] = color(250,200,250);
+    COLORS.storm[TROP][7] = color(240,90,90);
+    COLORS.storm[TROP][8] = color(190,60,60);
+    COLORS.storm[TROP][9] = color(130,10,10);
+    COLORS.storm[TROP][10] = color(120,10,120);
+    COLORS.storm[TROP][11] = color(20,0,140);
     COLORS.storm[SUBTROP] = {};
-    COLORS.storm[SUBTROP][-1] = color(111,43,246);     // SD //
-    COLORS.storm[SUBTROP][0] = color(167,248,167);     // SS //
+    COLORS.storm[SUBTROP][-1] = color(60,60,220);
+    COLORS.storm[SUBTROP][0] = color(60,220,60);
     COLORS.storm.extL = "red";
     COLORS.land = [];
     COLORS.land.push([0.85, color(190,190,190)]);
