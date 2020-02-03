@@ -13,7 +13,8 @@ class Designation{
             this.value = value.join('');
             if(typeof n === 'number') this.num = n;
         }else this.value = value;
-        this.effectiveTick = tick;
+        this.effectiveTicks = [tick];
+        this.hideTicks = [];
         this.subBasin = sub || 0;
         if(this.value instanceof LoadData) this.load(this.value);
     }
@@ -52,13 +53,37 @@ class Designation{
             })[this.value] || this.value.slice(0,1);
         }else return this.num + '';
     }
+    
+    activeAt(t){
+        let e;
+        let h;
+        for(let i=0;i<this.effectiveTicks.length;i++){
+            let n = this.effectiveTicks[i];
+            if(t>=n && (!e || n>e)) e = n;
+        }
+        for(let i=0;i<this.hideTicks.length;i++){
+            let n = this.hideTicks[i];
+            if(t>=n && (!h || n>h)) h = n;
+        }
+        if(e && (!h || e>h)) return e;
+        return false;
+    }
+
+    hide(t){
+        if(typeof t === 'number') this.hideTicks.push(t);
+    }
+
+    show(t){
+        if(typeof t === 'number') this.effectiveTicks.push(t);
+    }
 
     save(){
         let o = {};
         for(let p of [
             'value',
             'num',
-            'effectiveTick',
+            'effectiveTicks',
+            'hideTicks',
             'subBasin'
         ]) o[p] = this[p];
         return o;
@@ -70,43 +95,66 @@ class Designation{
             for(let p of [
                 'value',
                 'num',
-                'effectiveTick',
                 'subBasin'
             ]) this[p] = o[p];
+            for(let p of [
+                'effectiveTicks',
+                'hideTicks'
+            ]) if(o[p]) this[p] = o[p];
+            if(o.effectiveTick) this.effectiveTicks.push(o.effectiveTick);
         }
     }
 }
 
 class DesignationSystem{
-    constructor(subBasin,data,secondary,numEnable,numPrefix,numSuffix,numThresh,mainLists,auxLists,repLists,annual,anchor,nameThresh){
+    constructor(subBasin,data,opts/*,secondary,numEnable,numPrefix,numSuffix,numThresh,mainLists,auxLists,repLists,annual,anchor,nameThresh*/){
         this.subBasin = subBasin instanceof SubBasin && subBasin;
-        this.secondary = secondary;
+        if(!opts) opts = {};
+        // if designations should be secondary instead of primary
+        this.secondary = opts.secondary;
         this.numbering = {};
-        this.numbering.enabled = numEnable===undefined ? true : numEnable;
-        this.numbering.prefix = numPrefix || '';
-        this.numbering.suffix = '';
-        if(numSuffix!==undefined) this.numbering.suffix = numSuffix;
-        else if(this.numbering.enabled) this.numbering.suffix = DEPRESSION_LETTER;
+        // set to false to disable numbering (prefixes and suffixes may still be used for numbered designations from a parent sub-basin)
+        this.numbering.enabled = opts.numEnable===undefined ? true : opts.numEnable;
+        // a prefix for numbered designations (e.g. "BOB" and "ARB")
+        this.numbering.prefix = undefined;
+        if(opts.prefix!==undefined) this.numbering.prefix = opts.prefix;
+        else if(this.numbering.enabled) this.numbering.prefix = '';
+        // a suffix for numbered designations (e.g. "L" and "E")
+        this.numbering.suffix = undefined;
+        if(opts.suffix!==undefined) this.numbering.suffix = opts.suffix;
+        else if(this.numbering.enabled){
+            if(opts.prefix!==undefined) this.numbering.suffix = '';
+            else this.numbering.suffix = DEPRESSION_LETTER;
+        }
         // scale category threshold for numbering a system (defaults to tropical depression)
-        this.numbering.threshold = numThresh===undefined ? -1 : numThresh;
+        this.numbering.threshold = opts.numThresh===undefined ? -1 : opts.numThresh;
+        // behavior for primary designations of basin-crossing systems [may need more testing]
+        // 0 = always redesignate (use previous designation from this sub-basin if exists)
+        // 1 = strictly redesignate (use new designation even if a previous one from this sub-basin exists)
+        // 2 = redesignate regenerating systmes (keep designations of systems that retain TC status through the crossing; use previous designation if applicable)
+        // 3 = strictly redesignate regenerating systems (always use new designation for regenerating systems even if previous one exists)
+        // 4 = never redesignate (keep designations regardless of retaining TC status)
+        this.numbering.crossingMode = opts.numCross===undefined ? DESIG_CROSSMODE_ALWAYS : opts.numCross;
         this.naming = {};
         // main name lists to be used
         this.naming.mainLists = [];
-        if(mainLists instanceof Array) this.naming.mainLists = mainLists;
+        if(opts.mainLists instanceof Array) this.naming.mainLists = opts.mainLists;
         // auxiliary lists to be used if the main list for a year is exhausted (only applicable to annual naming)
         this.naming.auxiliaryLists = [];
-        if(auxLists instanceof Array) this.naming.auxiliaryLists = auxLists;
-        // lists to be used for automatic replacement of names on other lists
+        if(opts.auxLists instanceof Array) this.naming.auxiliaryLists = opts.auxLists;
+        // lists to be used for automatic replacement of names on other lists [To Be Implemented]
         this.naming.replacementLists = [];
-        if(repLists instanceof Array) this.naming.replacementLists = repLists;
+        if(opts.repLists instanceof Array) this.naming.replacementLists = opts.repLists;
         // whether naming should be annual (Atl/EPac/SWIO/PAGASA) or continuous (WPac/CPac/Aus/etc.)
-        this.naming.annual = annual;
+        this.naming.annual = opts.annual;
         // the year to anchor the cycle of annual lists to (this year will use the #0 (first) name list)
-        this.naming.annualAnchorYear = anchor===undefined ? 1979 : anchor;
+        this.naming.annualAnchorYear = opts.anchor===undefined ? 1979 : opts.anchor;
         // counter for continuous name assignment (only applicable to continuous naming)
-        this.naming.continuousNameIndex = 0;
+        this.naming.continuousNameIndex = opts.indexOffset || 0;
         // scale category threshold for naming a system (defaults to tropical storm)
-        this.naming.threshold = nameThresh || 0;
+        this.naming.threshold = opts.nameThresh || 0;
+        // behavior for primary designations of basin-crossing systems (see above)
+        this.naming.crossingMode = opts.nameCross===undefined ? DESIG_CROSSMODE_STRICT_REGEN : opts.nameCross;
         if(data instanceof LoadData) this.load(data);
     }
 
@@ -161,18 +209,14 @@ class DesignationSystem{
             let y = basin.getSeason(t);
             let season = basin.fetchSeason(y,false,true);
             let i;
-            if(this.naming.annual) i = season.namedStorms; // .namedStorms is temporary until subBasin season stats added
-            else i = this.naming.continuousNameIndex;
-            let nameDesig = this.getName(t,y,i);
-            if(this.naming.annual){
-                // WIP (subBasin season stats counter increment)
-            }else{
-                this.naming.continuousNameIndex++;
+            if(this.naming.annual) i = season.stats(sb.id).designationCounters.name++;
+            else{
+                i = this.naming.continuousNameIndex++;
                 let totalLength = 0;
                 for(let l of this.naming.mainLists) totalLength += l.length;
                 if(this.naming.continuousNameIndex>=totalLength) this.naming.continuousNameIndex = 0;
             }
-            return nameDesig;
+            return this.getName(t,y,i);
         }
         return undefined;
     }
@@ -182,7 +226,7 @@ class DesignationSystem{
         let suf = this.numbering.suffix;
         if(altPre!==undefined) pre = altPre;
         if(altSuf!==undefined) suf = altSuf;
-        let num = [pre,index+1,suf];
+        let num = [pre,index,suf];
         return new Designation(num,tick,this.subBasin ? this.subBasin.id : 0);
     }
 
@@ -192,9 +236,8 @@ class DesignationSystem{
             let basin = sb.basin;
             let t = basin.tick;
             let season = basin.fetchSeason(t,true,true);
-            let i = season.depressions; // .depressions is temporary until subBasin season stats added
+            let i = ++season.stats(sb.id).designationCounters.number; // prefix increment because numbering starts at 01
             let numDesig = this.getNum(t,i,altPre,altSuf);
-            // add subBasin season stats counter increment here
             return numDesig;
         }
         return undefined;
@@ -202,6 +245,7 @@ class DesignationSystem{
 
     save(){
         let d = {};
+        d.secondary = this.secondary;
         let numg = d.numbering = {};
         let namg = d.naming = {};
         let Numg = this.numbering;
@@ -210,7 +254,8 @@ class DesignationSystem{
             'enabled',
             'prefix',
             'suffix',
-            'threshold'
+            'threshold',
+            'crossingMode'
         ]) numg[p] = Numg[p];
         for(let p of [
             'mainLists',
@@ -219,7 +264,8 @@ class DesignationSystem{
             'annual',
             'annualAnchorYear',
             'continuousNameIndex',
-            'threshold'
+            'threshold',
+            'crossingMode'
         ]) namg[p] = Namg[p];
         return d;
     }
@@ -227,6 +273,7 @@ class DesignationSystem{
     load(data){
         if(data instanceof LoadData){
             let d = data.value;
+            this.secondary = d.secondary;
             let Numg = this.numbering;
             let Namg = this.naming;
             let numg = d.numbering;
@@ -237,6 +284,7 @@ class DesignationSystem{
                 'suffix',
                 'threshold'
             ]) Numg[p] = numg[p];
+            Numg.crossingMode = numg.crossingMode || 0;
             for(let p of [
                 'mainLists',
                 'auxiliaryLists',
@@ -246,6 +294,11 @@ class DesignationSystem{
                 'continuousNameIndex',
                 'threshold'
             ]) Namg[p] = namg[p];
+            Namg.crossingMode = namg.crossingMode===undefined ? 3 : namg.crossingMode;
+            for(let i=Namg.auxiliaryLists.length-1;i>=0;i--){
+                let a = Namg.auxiliaryLists[i];
+                if(a.length===1 && a[0]==="Unnamed") Namg.auxiliaryLists.splice(i,1);
+            }
         }
     }
 
@@ -255,8 +308,13 @@ class DesignationSystem{
         let aux = [];
         if(annual){
             for(let i=0;i<list.length-1;i++) main.push(JSON.parse(JSON.stringify(list[i])));
-            aux.push(JSON.parse(JSON.stringify(list[list.length-1])));
+            let auxlist = list[list.length-1];
+            if(auxlist && auxlist[0]!=="Unnamed") aux.push(JSON.parse(JSON.stringify(auxlist)));
         }else main.push(JSON.parse(JSON.stringify(list)));
-        return new DesignationSystem(undefined,undefined,undefined,undefined,undefined,undefined,undefined,main,aux,undefined,annual);
+        return new DesignationSystem(undefined,undefined,{
+            mainLists: main,
+            auxLists: aux,
+            annual: annual
+        });
     }
 }

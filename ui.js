@@ -1129,13 +1129,22 @@ UI.init = function(){
             text(n,this.width/2,35);
             textSize(15);
             let txt = "";
-            let formTime;
-            let dissTime;
-            if(S.TC){
-                formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
-                dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
-                txt += "Dates active: " + formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
-            }else txt += "Dates active: N/A";
+            txt += 'Dates active: ';
+            if(S.inBasinTC){
+                let enterTime = formatDate(UI.viewBasin.tickMoment(S.enterTime));
+                let exitTime = formatDate(UI.viewBasin.tickMoment(S.exitTime));
+                txt += enterTime;
+                if(S.enterTime>S.formationTime) txt += ' (entered basin)';
+                txt += ' - ';
+                if(S.exitTime){
+                    txt += exitTime;
+                    if(!S.dissipationTime || S.exitTime<S.dissipationTime) txt += ' (left basin)';
+                }else txt += 'currently active';
+            }else if(S.TC){
+                let formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
+                let dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
+                txt += formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
+            }else txt += "N/A";
             txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
             txt += "\nWind speed @ peak: " + (S.peak ? S.peak.windSpeed + " kts" : "N/A");
             txt += "\nACE: " + S.ACE;
@@ -1152,20 +1161,22 @@ UI.init = function(){
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             let txt;
-            if(se){
-                txt = "Depressions: " + se.depressions;
-                txt += "\nNamed storms: " + se.namedStorms;
-                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
-                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.majors;
+            if(se instanceof Season){
+                let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
+                let c = stats.classificationCounters;
+                txt = "Depressions: " + c[-1];
+                txt += "\nNamed storms: " + c[0];
+                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[1];
+                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[3];
                 if(UI.viewBasin.hypoCats){
-                    txt += '\nCategory 5+: ' + se.c5s;
-                    txt += '\nCategory 8+: ' + se.c8s;
-                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + se.hypercanes;
-                }else txt += "\nCategory 5s: " + se.c5s;
-                txt += "\nTotal ACE: " + se.ACE;
-                txt += "\nDamage: " + damageDisplayNumber(se.damage);
-                txt += "\nDeaths: " + se.deaths;
-                txt += "\nLandfalls: " + se.landfalls;
+                    txt += '\nCategory 5+: ' + c[5];
+                    txt += '\nCategory 8+: ' + c[8];
+                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + c[11];
+                }else txt += "\nCategory 5s: " + c[5];
+                txt += "\nTotal ACE: " + stats.ACE;
+                txt += "\nDamage: " + damageDisplayNumber(stats.damage);
+                txt += "\nDeaths: " + stats.deaths;
+                txt += "\nLandfalls: " + stats.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);
@@ -1197,7 +1208,9 @@ UI.init = function(){
             let s = stormInfoPanel.target;
             let t;
             if(s instanceof Storm){
-                t = s.birthTime;
+                if(s.enterTime) t = s.enterTime;
+                else if(s.formationTime) t = s.formationTime;
+                else t = s.birthTime;
                 t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }else{
                 t = UI.viewBasin.seasonTick(s);
@@ -1223,17 +1236,17 @@ UI.init = function(){
                 let beginSeasonTick;
                 let endSeasonTick;
                 for(let sys of s.forSystems()){
-                    if(sys.TC && (UI.viewBasin.getSeason(sys.formationTime)===target || UI.viewBasin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || UI.viewBasin.getSeason(sys.dissipationTime-1)>=target))){
+                    if(sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime)===target || UI.viewBasin.getSeason(sys.enterTime)<target && (sys.exitTime===undefined || UI.viewBasin.getSeason(sys.exitTime-1)>=target))){
                         TCs.push(sys);
-                        let dissTime = sys.dissipationTime || UI.viewBasin.tick;
-                        if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
+                        let dissTime = sys.exitTime || UI.viewBasin.tick;
+                        if(beginSeasonTick===undefined || sys.enterTime<beginSeasonTick) beginSeasonTick = sys.enterTime;
                         if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
                     }
                 }
                 for(let n=0;n<TCs.length-1;n++){
                     let t0 = TCs[n];
                     let t1 = TCs[n+1];
-                    if(t0.formationTime>t1.formationTime){
+                    if(t0.enterTime>t1.enterTime){
                         TCs[n] = t1;
                         TCs[n+1] = t0;
                         if(n>0) n -= 2;
@@ -1249,6 +1262,7 @@ UI.init = function(){
                 tb.months = eMoment.diff(sMoment,'months') + 1;
                 for(let t of TCs){
                     let part = {};
+                    part.storm = t;
                     part.segments = [];
                     // part.label = t.named ?
                     //     ({
@@ -1304,16 +1318,18 @@ UI.init = function(){
                     }
                     let rowFits;
                     part.row = -1;
-                    let labelZone = 20;
+                    textSize(12);
+                    let thisLabelZone = textWidth(part.label) + 6;
                     do{
                         part.row++;
                         rowFits = true;
                         for(let q=0;q<tb.parts.length;q++){
                             let p = tb.parts[q];
+                            let otherLabelZone = textWidth(p.label) + 6;
                             let thisS = part.segments[0].startX;
-                            let thisE = part.segments[part.segments.length-1].endX + labelZone;
+                            let thisE = part.segments[part.segments.length-1].endX + thisLabelZone;
                             let otherS = p.segments[0].startX;
-                            let otherE = p.segments[p.segments.length-1].endX + labelZone;
+                            let otherE = p.segments[p.segments.length-1].endX + otherLabelZone;
                             if(p.row===part.row){
                                 if(thisS>=otherS && thisS<=otherE ||
                                     thisE>=otherS && thisE<=otherE ||
@@ -1378,6 +1394,11 @@ UI.init = function(){
         for(let i=0;i<this.parts.length;i++){
             let p = this.parts[i];
             let y = tBound+p.row*15;
+            let mx = getMouseX()-this.getX();
+            let my = getMouseY()-this.getY();
+            textSize(12);
+            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
+            else noStroke();
             for(let j=0;j<p.segments.length;j++){
                 let S = p.segments[j];
                 if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
@@ -1387,10 +1408,27 @@ UI.init = function(){
             let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
             fill(COLORS.UI.text);
             textAlign(LEFT,CENTER);
-            textSize(12);
-            text(p.label,labelLeftBound+5,y+5);
+            text(p.label,labelLeftBound+3,y+5);
         }
-    },true,false);
+    },function(){
+        let w = this.width;
+        let h = this.height;
+        let lBound = w*0.05;
+        let tBound = h*0.2;
+        let newTarget;
+        for(let i=this.parts.length-1;i>=0;i--){
+            let p = this.parts[i];
+            let y = tBound+p.row*15;
+            let mx = getMouseX()-this.getX();
+            let my = getMouseY()-this.getY();
+            textSize(12);
+            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10){
+                newTarget = p.storm;
+                break;
+            }
+        }
+        if(newTarget) stormInfoPanel.target = newTarget;
+    },false);
 
     timelineBox.months = 12;
     timelineBox.sMonth = 0;

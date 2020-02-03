@@ -1,7 +1,8 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20200119a";
+const VERSION_NUMBER = "0.1.2";
+const BUILD_NUMBER = "20200203a";
 
-const SAVE_FORMAT = 3;  // Format #3 in use starting in v20190823a
+const SAVE_FORMAT = 5;  // Format #5 in use starting in v0.1
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -85,15 +86,18 @@ const MAP_TYPES = [     // Land generation controls for different map types
     },
     {   // "Eastern Pacific" map type
         form: 'pixelmap',
-        path: 'resources/EasternPacific.png'
+        path: 'resources/EasternPacific.png',
+        special: 'CPac'
     },
     {   // "Western Pacific" map type
         form: 'pixelmap',
-        path: 'resources/WesternPacific.png'
+        path: 'resources/WesternPacific.png',
+        special: 'PAGASA'
     },
     {   // "Northern Indian Ocean" map type
         form: 'pixelmap',
-        path: 'resources/NIO.png'
+        path: 'resources/NIO.png',
+        special: 'NIO'
     },
     {   // "Australian Region" map type
         form: 'pixelmap',
@@ -135,10 +139,10 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists (old pre-Desi
     ["Akoni","Ema","Hone","Iona","Keli","Lala","Moke","Nolo","Olana","Pena","Ulana","Wale","Aka","Ekeka","Hene","Iolana","Keoni","Lino","Mele","Nona","Oliwa","Pama","Upana","Wene","Alika","Ele","Huko","Iopa","Kika","Lana","Maka","Neki","Omeka","Pewa","Unala","Wali","Ana","Ela","Halola","Iune","Kilo","Loke","Malia","Niala","Oho","Pali","Ulika","Walaka"],
     ["Damrey","Haikui","Kirogi","Yun-yeung","Koinu","Bolaven","Sanba","Jelawat","Ewiniar","Maliksi","Gaemi","Prapiroon","Maria","Son-Tinh","Ampil","Wukong","Jongdari","Shanshan","Yagi","Leepi","Bebinca","Rumbia","Soulik","Cimaron","Jebi","Mangkhut","Barijat","Trami","Kong-rey","Yutu","Toraji","Man-yi","Usagi","Pabuk","Wutip","Sepat","Mun","Danas","Nari","Wipha","Francisco","Lekima","Krosa","Bailu","Podul","Lingling","Kajiki","Faxai","Peipah","Tapah","Mitag","Hagibis","Neoguri","Bualoi","Matmo","Halong","Nakri","Fengshen","Kalmaegi","Fung-wong","Kammuri","Phanfone","Vongfong","Nuri","Sinlaku","Hagupit","Jangmi","Mekkhala","Higos","Bavi","Maysak","Haishen","Noul","Dolphin","Kujira","Chan-hom","Linfa","Nangka","Saudel","Molave","Goni","Atsani","Etau","Vamco","Krovanh","Dujuan","Surigae","Choi-wan","Koguma","Champi","In-fa","Cempaka","Nepartak","Lupit","Mirinae","Nida","Omais","Conson","Chanthu","Dianmu","Mindulle","Lionrock","Kompasu","Namtheun","Malou","Nyatoh","Rai","Malakas","Megi","Chaba","Aere","Songda","Trases","Mulan","Meari","Ma-on","Tokage","Hinnamnor","Muifa","Merbok","Nanmadol","Talas","Noru","Kulap","Roke","Sonca","Nesat","Haitang","Nalgae","Banyan","Yamaneko","Pakhar","Sanvu","Mawar","Guchol","Talim","Doksuri","Khanun","Lan","Saola"],
     [
-        ["Amang","Betty","Chedeng","Dodong","Egay","Falcon","Goring","Hanna","Ineng","Jenny","Kabayan","Liwayway","Marilyn","Nimfa","Onyok","Perla","Quiel","Ramon","Sarah","Tisoy","Ursula","Viring","Weng","Yoyoy","Zigzag","Abe","Berto","Charo","Dado","Estoy","Felion","Gening","Herman","Irma","Jaime"],
+        ["Amang","Betty","Chedeng","Dodong","Egay","Falcon","Goring","Hanna","Ineng","Jenny","Kabayan","Liwayway","Marilyn","Nimfa","Onyok","Perla","Quiel","Ramon","Sarah","Tamaraw","Ugong","Viring","Weng","Yoyoy","Zigzag","Abe","Berto","Charo","Dado","Estoy","Felion","Gening","Herman","Irma","Jaime"],
         ["Ambo","Butchoy","Carina","Dindo","Enteng","Ferdie","Gener","Helen","Igme","Julian","Kristine","Leon","Marce","Nika","Ofel","Pepito","Quinta","Rolly","Siony","Tonyo","Ulysses","Vicky","Warren","Yoyong","Zosimo","Alakdan","Baldo","Clara","Dencio","Estong","Felipe","Gomer","Heling","Ismael","Julio"],
-        ["Auring","Bising","Crising","Dante","Emong","Fabian","Gorio","Huaning","Isang","Jolina","Kiko","Lannie","Maring","Nando","Odette","Paolo","Quedan","Ramil","Salome","Tino","Urduja","Vinta","Wilma","Yasmin","Zoraida","Alamid","Bruno","Conching","Dolor","Ernie","Florante","Gerardo","Hernan","Isko","Jerome"],
-        ["Agaton","Basyang","Caloy","Domeng","Ester","Florita","Gardo","Henry","Inday","Josie","Karding","Luis","Maymay","Neneng","Ompong","Paeng","Queenie","Rosita","Samuel","Tomas","Usman","Venus","Waldo","Yayang","Zeny","Agila","Bagwis","Chito","Diego","Elena","Felino","Gunding","Harriet","Indang","Jessa"],
+        ["Auring","Bising","Crising","Dante","Emong","Fabian","Gorio","Huaning","Isang","Jolina","Kiko","Lannie","Maring","Nando","Odette","Paolo","Quedan","Ramil","Salome","Tino","Uwan","Verbena","Wilma","Yasmin","Zoraida","Alamid","Bruno","Conching","Dolor","Ernie","Florante","Gerardo","Hernan","Isko","Jerome"],
+        ["Agaton","Basyang","Caloy","Domeng","Ester","Florita","Gardo","Henry","Inday","Josie","Karding","Luis","Maymay","Neneng","Obet","Paeng","Queenie","Rosal","Samuel","Tomas","Umberto","Venus","Waldo","Yayang","Zeny","Agila","Bagwis","Chito","Diego","Elena","Felino","Gunding","Harriet","Indang","Jessa"],
         ["Unnamed"]
     ],
     ["Anika","Billy","Charlotte","Dominic","Ellie","Freddy","Gabrielle","Herman","Ilsa","Jasper","Kirrily","Lincoln","Megan","Neville","Olga","Paul","Robyn","Sean","Tasha","Vince","Zelia","Anthony","Bianca","Courtney","Dianne","Errol","Fina","Grant","Hayley","Iggy","Jenna","Koji","Luana","Mitchell","Narelle","Oran","Peta","Riordan","Sandra","Tim","Victoria","Zane","Alessia","Bruce","Catherine","Dylan","Edna","Fletcher","Gillian","Hadi","Ivana","Jack","Kate","Laszlo","Mingzhu","Nathan","Olwyn","Quincey","Raquel","Stan","Tatiana","Uriah","Yvette","Alfred","Blanche","Caleb","Dara","Ernie","Frances","Greg","Hilda","Irving","Joyce","Kelvin","Linda","Marco","Nora","Owen","Penny","Riley","Savannah","Trevor","Veronica","Wallace","Ann","Blake","Claudia","Damien","Esther","Ferdinand","Gretel","Harold","Imogen","Joshua","Kimi","Lucas","Marian","Niran","Odette","Paddy","Ruby","Seth","Tiffany","Vernon"],
@@ -186,6 +190,12 @@ const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
 const DEFAULT_MAIN_SUBBASIN = 0;
 const DEFAULT_OUTBASIN_SUBBASIN = 255;
+const SAFFIR_SIMPSON_INDEX = -1;
+const DESIG_CROSSMODE_ALWAYS = 0;
+const DESIG_CROSSMODE_STRICT_ALWAYS = 1;
+const DESIG_CROSSMODE_REGEN = 2;
+const DESIG_CROSSMODE_STRICT_REGEN = 3;
+const DESIG_CROSSMODE_KEEP = 4;
 // const ACTIVITY_MODE_NORMAL = 0;
 // const ACTIVITY_MODE_HYPER = 1;
 // const ACTIVITY_MODE_WILD = 2;
@@ -200,6 +210,8 @@ const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds a
 const FORMAT_WITH_SAVED_SEASONS = 1;
 const FORMAT_WITH_INDEXEDDB = 2;
 const FORMAT_WITH_IMPROVED_ENV = 3;
+const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
+const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 
@@ -257,16 +269,16 @@ const COLORS = {};      // For storing all colors used in the graphics
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
     COLORS.bg = color(0,127,255);
     COLORS.storm = {};
-    COLORS.storm[EXTROP] = color(224,224,224);         // EX //
-    COLORS.storm[TROPWAVE] = color(0,255,255);         // LO //
+    COLORS.storm[EXTROP] = color(192,192,192);
+    COLORS.storm[TROPWAVE] = color(128,204,255);
     COLORS.storm[TROP] = {};
-    COLORS.storm[TROP][-1] = color(0,123,244);         // TD //
-    COLORS.storm[TROP][0] = color(0,239,0);            // TS //
-    COLORS.storm[TROP][1] = color(244,244,0);          // C1 //
-    COLORS.storm[TROP][2] = color(244,194,0);          // C2 //
-    COLORS.storm[TROP][3] = color(244,114,0);          // C3 //
-    COLORS.storm[TROP][4] = color(245,46,0);           // C4 //
-    COLORS.storm[TROP][5] = color(218,0,54);           // C5 //
+    COLORS.storm[TROP][-1] = color(94,186,255);        // TD //
+    COLORS.storm[TROP][0] = color(0,250,244);          // TS //
+    COLORS.storm[TROP][1] = color(255,255,204);        // C1 //
+    COLORS.storm[TROP][2] = color(255,231,117);        // C2 //
+    COLORS.storm[TROP][3] = color(255,193,64);         // C3 //
+    COLORS.storm[TROP][4] = color(255,143,32);         // C4 //
+    COLORS.storm[TROP][5] = color(255,96,96);          // C5 //
     COLORS.storm[TROP][6] = color(255,20,20);          // C6 //
     COLORS.storm[TROP][7] = color(160,12,12);          // C7 //
     COLORS.storm[TROP][8] = color(151,36,70);          // C8 //
@@ -274,8 +286,8 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.storm[TROP][10] = color(211,78,153);        // C10 //
     COLORS.storm[TROP][11] = color(255,153,255);       // HYC //
     COLORS.storm[SUBTROP] = {};
-    COLORS.storm[SUBTROP][-1] = color(111,43,246);     // SD //
-    COLORS.storm[SUBTROP][0] = color(167,248,167);     // SS //
+    COLORS.storm[SUBTROP][-1] = color(94,186,255);     // SD //
+    COLORS.storm[SUBTROP][0] = color(0,250,244);       // SS //
     COLORS.storm.extL = "red";
     COLORS.land = [];
     COLORS.land.push([0.85, color(190,190,190)]);
